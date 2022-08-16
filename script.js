@@ -32,20 +32,19 @@ const forwardGetLinks = (api_url) => {
 const page = (data) => {
   let result_var = Object.keys(data)[Object.keys(data).length-1] // accounts for films, uses result vs results
   let result = data[result_var]
-  console.log('page',result)
-  result_var === 'results' 
-  ? console.log('not films') 
-  : console.log('chose films')
 
-
-  let categories = Object.keys(result)
-  let links = Object.values(result)
+  let entityNames = Object.values(result)
   
+  console.log('page',entityNames)
   document.body.innerHTML = ''
-  links.forEach(x => {
-    // console.log(x.name)
-    document.body.innerHTML += `<p id="${x}">${x.name}</p>`
-  })
+
+  result_var === 'results' 
+  ? entityNames.forEach(x => { document.body.innerHTML += `<p id="${x.uid}">${x.name}</p>` }) 
+  : entityNames.forEach(x => { document.body.innerHTML += `<p id="${x.uid}">${x.properties.title}</p>` }) 
+  
+
+  
+
 
 }
 
