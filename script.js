@@ -8,7 +8,7 @@ async function getDirectory(api_url) {
 }
 getDirectory(api_url)
 
-// creates the directory response in the DOM
+// displays the directory response in the DOM
 function createDirectory(data) {
   let directory = document.getElementById("directory")
   // displays category options from API data response wrapped in a tags
@@ -16,8 +16,9 @@ function createDirectory(data) {
   categoryEventListeners()
 }
 
+// gives directory's <a> link categories an onclick event listener that triggers a data fetch from the SWAPI
 function categoryEventListeners() {
-  const atags = document.querySelectorAll("a")
+  const atags = document.querySelectorAll("nav a")
   atags.forEach((tag) => {
     tag.addEventListener("click", () => {
       let category_api_url = api_url + tag.id
@@ -26,30 +27,55 @@ function categoryEventListeners() {
   })
 }
 
-
-
+// fetches the initial set of selectable options belonging to the selected category from the directory
 async function getCategories(api_url,categoryName) {
   const response = await fetch(api_url)
   const data = await response.json()
   displayCategoryOptions(data,categoryName)
 }
 
-function buttonsEventListeners(data,category) {
-  let page = 0
-  if(data.previous===null) {
-    page = 1
-  } else if (data.next === null) {
-    page = Math.ceil(data.count/10)
-  } else {
-    page = data.next[data.next.length-1] - 1
-  }
+// displays selectable options from the SWAPI fetched data
+function displayCategoryOptions(data,category) {
   let categoryInfo = document.getElementById("categoryInfo")
-  categoryInfo.innerHTML += 
+  // Displays chosen category in a header 
+  categoryInfo.innerHTML = `<hr><h3 id="displayHeader">${category}</h3><section></section>` // insert next and prev buttons here
+  let dataDisplay = document.querySelector("main section")
+  // add category options to HTML in <a> tags
+  let options = data.results
+  let optionName = ''
+  options.forEach((option) => {
+    // all but films use .name
+    (category !== 'films') ? optionName = option.name : optionName = option.title 
+    dataDisplay.innerHTML += `<a href="#" class="category_option" name="${option.url}">${optionName}</a><br>`
+  })
+  
+  // gives event listeners
+  displayCategoryTraversal(data,category)
+
+  // give <a> tags on click function event listeners
+  let elementOptions = document.querySelectorAll("a[class=\"category_option\"]")
+  elementOptions.forEach(option => {
+    option.addEventListener("click", () => { 
+      getOption(option.name)
+    })
+  })
+}
+
+// displays next and previous buttons to traverse sets of a category's available options to choose from
+function displayCategoryTraversal(data,category) {
+  let page = 0
+  if(data.previous === null) {page = 1} 
+  else if (data.next === null) {page = Math.ceil(data.count/10)} 
+  else {page = data.next[data.next.length-1] - 1}
+
+  let dataDisplay = document.querySelector("main section")
+  dataDisplay.innerHTML += 
   `<div id="categoryTraversal">
   <button name="${data.previous}">previous</button>
   <label id="page">page: ${page}</label>
   <button name="${data.next}">next</button>
   </div>`
+
   let categoryTraversalButtons = document.querySelectorAll("button")
   categoryTraversalButtons.forEach((button) => { 
     if (button.name === 'null') {
@@ -62,113 +88,73 @@ function buttonsEventListeners(data,category) {
   })
 }
 
-
-function displayCategoryOptions(data,category) {
-  let categoryInfo = document.getElementById("categoryInfo")
-  categoryInfo.innerHTML = `<hr><header><strong>${category}</strong></header>` // insert next and prev buttons here
-  let options = data.results
-  
-
-
-  
-
-  // display initial page options in <a> tags
-  let optionName = ''
-  options.forEach((option) => {
-    (category !== 'films') ? optionName = option.name : optionName = option.title // all but films use .name
-    categoryInfo.innerHTML += `<a href="#" class="category_option" name="${option.url}">${optionName}</a><br>`
-  })
-  
-  // give <a> tags on click function event listeners
-  const atags = document.querySelectorAll("a[class=\"category_option\"]")
-  atags.forEach((tag) => {
-    tag.addEventListener("click", () => {
-    })
-  })
-
-
-  // give event listeners
-  buttonsEventListeners(data,category)
+// gets option data when selected by user
+async function getOption(option_url) {
+  const response = await fetch(option_url)
+  const data = await response.json()
+  displayOptionData(data)
 }
 
-// async function getCategory(api_url,categoryName) {
-//   const response = await fetch(api_url)
-//   const data = await response.json()
-//   createCategory(data,categoryName)
-// }
-
-// function createCategory(categoryData, categoryName) {
-//   const next = categoryData.next
-//   const prev = categoryData.previous
-//   let category = Object.values(categoryData.results)
-
-//   let categoryHost = document.getElementById("categoryInfo")
-//   categoryHost.innerHTML = ''
-
-//   category.forEach((item,categoryNum) => {
-//     let objectElement = categoryName+'-'+categoryNum
-//     categoryHost.innerHTML += `<section id=${objectElement}></section>`
-//     let sectionHost = document.querySelector(`section[id="${objectElement}"]`)
-
-//     sectionHost.innerHTML += `<hr><ul id=${objectElement}-base>`
-//     let itemUL = document.querySelector(`ul[id="${objectElement}-base"]`)
-//       for(let key in item) {
-//         if(categoryName != 'films') {
-//           if (typeof item[key] === 'object' || item[key].includes('https')) {
-//             getCategoryObject(objectElement,key,item[key])
-//           } else if (key !== 'created' && key !== 'edited' && key !== 'url') {
-//             itemUL.innerHTML += `<li id="${categoryName}" class="${key}">${key}: ${item[key]}</li>`
-//           }
-//         } else {
-//           if (typeof item[key] === 'object') {
-//             getCategoryObject(objectElement,key,item[key])
-//           } else if (key !== 'created' && key !== 'edited' && key !== 'url') {
-//             itemUL.innerHTML += `<li id="${categoryName}" class="${key}">${key}: ${item[key]}</li>`
-//           }
-//         }
-//       }
-//   })
-
+// displays option's data
+function displayOptionData(data) {
+  let optionAttributes = Object.keys(data)
+  let attributeValues = Object.values(data)
   
-// }
 
-// function getCategoryObject(element_target,categoryPull,urls) {
-//   let sectionHost = document.querySelector(`section[id="${element_target}"]`)
-//   sectionHost.innerHTML +=  `<ul id=${element_target}-${categoryPull}>`
+  let dataHeader = document.getElementById("displayHeader")
+
+  let dataDisplayWrapper = document.querySelector("main section")
+  dataDisplayWrapper.innerHTML = `<ul id="optionData"></ul>`
+  let baseDataDisplay = document.querySelector("main section ul")
+
+  attributeValues.forEach((value,key) => {
+    let keyName = optionAttributes[key]
+
+    if (keyName === 'name') {
+      dataHeader.innerHTML = `<strong>${data.name}</strong>`
+    } 
+    else if (keyName === 'title') {
+      dataHeader.innerHTML = `<strong>${data.title}</strong>`
+    }
+    else if (keyName != 'url') {
+      if (typeof value === 'object' && value.length != 0) {
+        value.forEach((link) => {
+          getOptionLinkedOptions(keyName,link)
+        })      
+      } else if (typeof value === 'string' && value.includes('https')) {
+          getOptionLinkedOptions(keyName,value)
+      } else {
+          if (value.length != 0 && keyName !== 'created' && keyName !== 'edited') 
+          baseDataDisplay.innerHTML += `<li>${keyName}: ${value}</li>`
+      }
+    }
+  })
+}
+
+async function getOptionLinkedOptions(keyName,value) {
+    const response = await fetch(value)
+    const data = await response.json()
+
+    // function to display option's single linked option 
+    displayOptionLinkedOptions(keyName,data)
+  }
+
+function displayOptionLinkedOptions(keyName,data) {
+  let displayArea = document.getElementById("categoryInfo")
+  let categoryOptionsSection = document.querySelector(`main section ul#${keyName}`)
+  let optionName = ''
+  if (typeof data.name !== 'string') {optionName = data.title} else {optionName = data.name}
   
-//   if (typeof urls === 'object') {
-//     let urlTarget = `${element_target}-${categoryPull}`
-//     let categorySection = document.querySelector(`ul[id="${urlTarget}"]`)
-//     categorySection.innerHTML = `<strong>${categoryPull}</strong>`
-//     try{
-//       if (urls.length != 0) {
-//         urls.forEach(url => {
-//           getCategoryObjectSingle(urlTarget,categoryPull,url)
-//         })
-//       }
-//     } catch (e) {
-//       // .length produces error 'TypeError: Cannot read properties of null (reading 'length') for the null objects
-//     }
-//   } else if (categoryPull != 'url') {
-//     let urlTarget = `${element_target}-${categoryPull}`
-//     let categorySection = document.querySelector(`ul[id="${urlTarget}"]`)
-//     categorySection.innerHTML = `<strong>${categoryPull}</strong>`
-//     getCategoryObjectSingle(urlTarget,categoryPull,urls)
-//   }
-// }
-
-// async function getCategoryObjectSingle(element_target,categoryPull,urls) {
-//   const response = await fetch(urls)
-//   const data = await response.json()
-//   createCategoryObjectSingle(element_target,categoryPull,data)
-// } 
-
-// function createCategoryObjectSingle(element_target,categoryPull,data) {
-//   if (categoryPull === 'films') {
-//     let categoryHost = document.getElementById(`${element_target}`)
-//     categoryHost.innerHTML += `<li><a href="#">${data.title}</a></li>`
-//   }else {
-//     let categoryHost = document.getElementById(`${element_target}`)
-//     categoryHost.innerHTML += `<li><a href="#">${data.name}</a></li>`
-//   }
-// }
+  // if categoryOptionsSection is null, create categoryOptionsSection, append to if exists
+  if (categoryOptionsSection === null) {
+    displayArea.innerHTML += `
+    <section>
+      <h4>${keyName}</h4>
+      <ul id="${keyName}">
+        <li><a href="#" name="${data.url}">${optionName}</a></li>
+      </ul>
+    </section>`
+  } else {
+    categoryOptionsSection.innerHTML += `<li><a href="#" name="${data.url}">${optionName}</a></li>`
+  }
+}
