@@ -53,17 +53,19 @@ async function getCategories(api_url, categoryName) {
 
   loader.style.display = "none"
   displayCategoryOptions(data, categoryName)
+
+  let linkedOptionsDiv = document.getElementById("linkedOptions")
+  linkedOptionsDiv.style.display = "none"
 }
 
 // displays selectable options from the SWAPI fetched data
 function displayCategoryOptions(data, category) {
   let categoryInfo = document.getElementById("categoryInfo")
-
   // Displays chosen category in a header 
   categoryInfo.innerHTML = `
   <div id="basicCategoryData">  
-    <h3 id="displayHeader">${category}</h3>
-    <section></section>
+  <h3 id="displayHeader">${category}</h3>
+  <section></section>
   </div>
   <div id="linkedOptions"></div>` // insert next and prev buttons here
   let dataDisplay = document.querySelector("main div section")
@@ -75,10 +77,11 @@ function displayCategoryOptions(data, category) {
     (category !== 'films') ? optionName = option.name : optionName = option.title
     dataDisplay.innerHTML += `<a href="#" class="category_option" name="${option.url}">${optionName}</a><br>`
   })
-
+  
+  
   // gives event listeners
   displayCategoryTraversal(data, category)
-
+  
   // give <a> tags on click function event listeners
   let elementOptions = document.querySelectorAll("a[class=\"category_option\"]")
   elementOptions.innerHTML = ''
@@ -100,9 +103,9 @@ function displayCategoryTraversal(data, category) {
   let dataDisplay = document.querySelector("main")
   dataDisplay.innerHTML +=
     `<div id="categoryTraversal">
-  <button name="${data.previous}">previous</button>
+  <button name="${data.previous}">🢀 previous</button>
   <label id="page">page: ${page}</label>
-  <button name="${data.next}">next</button>
+  <button name="${data.next}">next 🢂</button>
   </div>`
 
   let categoryTraversalButtons = document.querySelectorAll("button")
@@ -122,6 +125,8 @@ async function getOption(option_url) {
   const response = await fetch(option_url)
   const data = await response.json()
   displayOptionData(data)
+  let linkedOptionsDiv = document.getElementById("linkedOptions")
+  linkedOptionsDiv.style.display = "grid"
 }
 
 // displays option's data // remove css class
@@ -136,7 +141,7 @@ function displayOptionData(data) {
 
   let linkedOptionsClear = document.getElementById("linkedOptions")
   linkedOptionsClear.innerHTML = ''
-
+  
   let optionAttributes = Object.keys(data)
   let attributeValues = Object.values(data)
 
@@ -178,7 +183,6 @@ async function getOptionLinkedOptions(keyName, value) {
   await displayOptionLinkedOptions(keyName, data)
   await getLinkedOption(data.url)
 
-  loader.style.display = "none"
 }
 
 function displayOptionLinkedOptions(keyName, data) {
@@ -206,10 +210,15 @@ async function getLinkedOption(option_url) {
   const data = await response.json()
   // let displayArea = document.getElementById("linkedOptions")
   await displayLinkedOptionData(data, option_url)
+
+
 }
 
 function displayLinkedOptionData(data, url) {
   let linkedObject = document.querySelectorAll(`a[name="${url}"]`)
   let target = linkedObject[0]
-  target.addEventListener("click", () => { displayOptionData(data) })
+  target.addEventListener("click", () => { displayOptionData(data) 
+  })
+  let loader = document.getElementById("loader")
+  loader.style.display = "none"
 }
