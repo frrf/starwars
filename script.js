@@ -31,12 +31,17 @@ function categoryEventListeners() {
     tag.addEventListener("click", () => {
       let category_api_url = api_url + tag.id
       getCategories(category_api_url, tag.id)
+      let categoryInfo = document.getElementById("categoryInfo")
+      categoryInfo.classList.remove("optionDisplay")
+      categoryInfo.classList.add("categoryDisplay")
     })
   })
 }
 
 // fetches the initial set of selectable options belonging to the selected category from the directory
 async function getCategories(api_url, categoryName) {
+
+
   let directoryGrid = document.getElementById("directory")
   directoryGrid.classList.remove("nav_as_directory")
   directoryGrid.classList.add("nav_as_nav")
@@ -56,10 +61,12 @@ function displayCategoryOptions(data, category) {
 
   // Displays chosen category in a header 
   categoryInfo.innerHTML = `
+  <div id="basicCategoryData">  
     <h3 id="displayHeader">${category}</h3>
     <section></section>
-    <div id="linkedOptions"></div>` // insert next and prev buttons here
-  let dataDisplay = document.querySelector("main section")
+  </div>
+  <div id="linkedOptions"></div>` // insert next and prev buttons here
+  let dataDisplay = document.querySelector("main div section")
   // add category options to HTML in <a> tags
   let options = data.results
   let optionName = ''
@@ -79,6 +86,7 @@ function displayCategoryOptions(data, category) {
     option.addEventListener("click", () => {
       getOption(option.name)
     })
+  
   })
 }
 
@@ -116,13 +124,19 @@ async function getOption(option_url) {
   displayOptionData(data)
 }
 
-// displays option's data
+// displays option's data // remove css class
 function displayOptionData(data) {
+  let categoryInfo = document.getElementById("categoryInfo")
+  categoryInfo.classList.remove("categoryDisplay")
+  categoryInfo.classList.add("optionDisplay")
+
+
   let traversalNav = document.getElementById("categoryTraversal")
   traversalNav.style.display = "none"
 
   let linkedOptionsClear = document.getElementById("linkedOptions")
   linkedOptionsClear.innerHTML = ''
+
   let optionAttributes = Object.keys(data)
   let attributeValues = Object.values(data)
 
@@ -147,19 +161,24 @@ function displayOptionData(data) {
         })
       } else if (typeof value === 'string' && value.includes('https')) {
         getOptionLinkedOptions(keyName, value)
+        // loader.style.display = "none"
       } else {
         if (value.length != 0 && keyName !== 'created' && keyName !== 'edited')
-          baseDataDisplay.innerHTML += `<li>${keyName}: ${value}</li>`
+          baseDataDisplay.innerHTML += `<li><strong>${keyName.replace("_"," ")}</strong>: ${value}</li>`
       }
     }
   })
 }
 
 async function getOptionLinkedOptions(keyName, value) {
+  let loader = document.getElementById("loader")
+  loader.style.display = "block"
   const response = await fetch(value)
   const data = await response.json()
   await displayOptionLinkedOptions(keyName, data)
   await getLinkedOption(data.url)
+
+  loader.style.display = "none"
 }
 
 function displayOptionLinkedOptions(keyName, data) {
