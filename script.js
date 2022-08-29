@@ -2,9 +2,16 @@ const api_url = 'https://swapi.dev/api/'
 
 // gets initial directory data
 async function getDirectory(api_url) {
+  let loader = document.getElementById("loader")
+  loader.style.display = "block"
+
   const response = await fetch(api_url)
   const data = await response.json()
-  createDirectory(data)
+
+  loader.style.display = "none"
+
+  await createDirectory(data)
+  await categoryEventListeners()
 }
 getDirectory(api_url)
 
@@ -13,7 +20,8 @@ function createDirectory(data) {
   let directory = document.getElementById("directory")
   // displays category options from API data response wrapped in a tags
   Object.keys(data).map(data => directory.innerHTML += `<a href="#" id="${data}">${data}<br></a>`)
-  categoryEventListeners()
+  let directoryGrid = document.getElementById("directory")
+  directoryGrid.classList.add("nav_as_directory")
 }
 
 // gives directory's <a> link categories an onclick event listener that triggers a data fetch from the SWAPI
@@ -29,8 +37,16 @@ function categoryEventListeners() {
 
 // fetches the initial set of selectable options belonging to the selected category from the directory
 async function getCategories(api_url, categoryName) {
+  let directoryGrid = document.getElementById("directory")
+  directoryGrid.classList.remove("nav_as_directory")
+  directoryGrid.classList.add("nav_as_nav")
+
+  let loader = document.getElementById("loader")
+  loader.style.display = "block"
   const response = await fetch(api_url)
   const data = await response.json()
+
+  loader.style.display = "none"
   displayCategoryOptions(data, categoryName)
 }
 
@@ -40,7 +56,7 @@ function displayCategoryOptions(data, category) {
 
   // Displays chosen category in a header 
   categoryInfo.innerHTML = `
-    <hr><h3 id="displayHeader">${category}</h3>
+    <h3 id="displayHeader">${category}</h3>
     <section></section>
     <div id="linkedOptions"></div>` // insert next and prev buttons here
   let dataDisplay = document.querySelector("main section")
@@ -73,7 +89,7 @@ function displayCategoryTraversal(data, category) {
   else if (data.next === null) { page = Math.ceil(data.count / 10) }
   else { page = data.next[data.next.length - 1] - 1 }
 
-  let dataDisplay = document.querySelector("main section")
+  let dataDisplay = document.querySelector("main")
   dataDisplay.innerHTML +=
     `<div id="categoryTraversal">
   <button name="${data.previous}">previous</button>
@@ -102,11 +118,11 @@ async function getOption(option_url) {
 
 // displays option's data
 function displayOptionData(data) {
-  
+  let traversalNav = document.getElementById("categoryTraversal")
+  traversalNav.style.display = "none"
+
   let linkedOptionsClear = document.getElementById("linkedOptions")
   linkedOptionsClear.innerHTML = ''
-  // console.log(linkedOptionsClear)
-  
   let optionAttributes = Object.keys(data)
   let attributeValues = Object.values(data)
 
@@ -127,7 +143,7 @@ function displayOptionData(data) {
     else if (keyName != 'url') {
       if (typeof value === 'object' && value.length != 0) {
         value.forEach((link) => {
-        getOptionLinkedOptions(keyName, link)
+          getOptionLinkedOptions(keyName, link)
         })
       } else if (typeof value === 'string' && value.includes('https')) {
         getOptionLinkedOptions(keyName, value)
@@ -142,7 +158,7 @@ function displayOptionData(data) {
 async function getOptionLinkedOptions(keyName, value) {
   const response = await fetch(value)
   const data = await response.json()
-  await displayOptionLinkedOptions(keyName,data)
+  await displayOptionLinkedOptions(keyName, data)
   await getLinkedOption(data.url)
 }
 
@@ -170,12 +186,11 @@ async function getLinkedOption(option_url) {
   const response = await fetch(option_url)
   const data = await response.json()
   // let displayArea = document.getElementById("linkedOptions")
-  await displayLinkedOptionData(data,option_url)
+  await displayLinkedOptionData(data, option_url)
 }
 
-function displayLinkedOptionData(data,url) {
-  let linkedObject = document.querySelectorAll(`a[name="${url}"]`)  
+function displayLinkedOptionData(data, url) {
+  let linkedObject = document.querySelectorAll(`a[name="${url}"]`)
   let target = linkedObject[0]
-  console.log('event listener on: ',target)
-  target.addEventListener("click",() => {displayOptionData(data)})
+  target.addEventListener("click", () => { displayOptionData(data) })
 }
